@@ -9,12 +9,15 @@ from bpy.types import Operator, Panel
 
 from . import blender_materialx_exporter
 
+NAME = "MaterialX Export"
+VERSION = "1.1.4"
+
 bl_info = {
-    "name": "MaterialX Export",
+    "name": NAME,
     "author": "Ben Houston (neuralsoft@gmail.com)",
     "website": "https://github.com/Tweekazoid/blender_materialx_addon",
     "support": "COMMUNITY",
-    "version": (1, 1, 4),  # Updated version number
+    "version": tuple(map(int, VERSION.split("."))),  # Updated version number
     "blender": (4, 0, 0),
     "location": "Properties > Material",
     "description": "Export Blender materials to MaterialX format",
@@ -32,7 +35,7 @@ logger.addHandler(logging.StreamHandler())
 def print_startup_message():
     """Print startup message when addon is loaded"""
     logger.info("=" * 60)
-    logger.info("🎨 %s v%s loaded successfully!", bl_info["name"], bl_info["version"])
+    logger.info("🎨 %s v%s loaded successfully!", NAME, VERSION)
     logger.info("=" * 60)
     logger.info("📁 Location: Properties > Material > MaterialX")
     logger.info("🔧 Features:")
