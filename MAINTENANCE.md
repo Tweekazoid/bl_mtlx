@@ -14,7 +14,7 @@ The addon uses three main components for node mapping:
 
 ### 1. NODE_MAPPING Dictionary
 
-Located in `materialx_addon/blender_materialx_exporter.py` around line 229.
+Located in `material_x/blender_materialx_exporter.py` around line 229.
 
 **Purpose:** Provides explicit mapping between Blender node types and their MaterialX equivalents, including input/output name translations.
 
@@ -57,7 +57,7 @@ NODE_MAPPING = {
 
 ### 2. NODE_SCHEMAS Dictionary
 
-Located in `materialx_addon/blender_materialx_exporter.py` around line 143.
+Located in `material_x/blender_materialx_exporter.py` around line 143.
 
 **Purpose:** Provides type information and category for complex nodes that use schema-driven mapping.
 
@@ -67,7 +67,7 @@ NODE_SCHEMAS = {
     'NODE_TYPE': [
         {
             'blender': 'Blender_Input_Name',
-            'mtlx': 'MaterialX_Input_Name', 
+            'mtlx': 'MaterialX_Input_Name',
             'type': 'materialx_type',
             'category': 'materialx_category'
         },
@@ -89,7 +89,7 @@ NODE_SCHEMAS = {
 
 ### 3. NodeMapper Class
 
-Located in `materialx_addon/blender_materialx_exporter.py` around line 728.
+Located in `material_x/blender_materialx_exporter.py` around line 728.
 
 **Purpose:** Contains mapper functions that handle the actual node creation and connection logic.
 
@@ -104,7 +104,7 @@ class NodeMapper:
             # ... more mappers
         }
         return mappers.get(node_type)
-    
+
     @staticmethod
     def map_node_type_enhanced(node, builder: MaterialXBuilder, input_nodes: Dict, input_nodes_by_index: Dict = None, blender_node=None, constant_manager=None, exported_nodes=None) -> str:
         """Enhanced node type mapping with type-safe input creation."""
@@ -355,4 +355,4 @@ This completes the addition of the new node type to the addon.
 
 The explicit mapping system ensures robust translation between Blender and MaterialX nodes. By following this guide, you can systematically add support for new node types while maintaining the reliability and consistency of the addon.
 
-Remember to test thoroughly and document any new patterns or approaches you discover during development. 
+Remember to test thoroughly and document any new patterns or approaches you discover during development.

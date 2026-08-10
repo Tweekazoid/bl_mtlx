@@ -676,25 +676,26 @@ class MaterialXDocumentManager:
                         "Found %d node names containing '%s': %s", len(matching_names), node_type, matching_names[:5]
                     )
 
-                for nodedef in all_node_defs:
-                    nodedef_name = nodedef.getName()
-                    # Look for the node type in the name
-                    # (e.g., "standard_surface" in "ND_standard_surface_surfaceshader")
-                    if node_type.lower() in nodedef_name.lower():
-                        nodedef_category = nodedef.getCategory()
-                        nodedef_type = nodedef.getType()
-                        self.logger.debug(
-                            "Checking %s - category: %s, type: %s, expected: %s",
-                            nodedef_name,
-                            nodedef_category,
-                            nodedef_type,
-                            category,
-                        )
-                        if category is None or nodedef_type == category:
-                            result = nodedef
-                            self.logger.debug("Found match by name: %s (type: %s)", nodedef_name, nodedef.getType())
-                            self.logger.info("Found match by name: %s (type: %s)", nodedef_name, nodedef.getType())
-                            break
+                # Collect all name matches, then prefer an exact standard nodedef over
+                # gltf_* variants: Unreal's standard_surface pipeline expects standard nodes.
+                name_matches = [
+                    nd
+                    for nd in all_node_defs
+                    if node_type.lower() in nd.getName().lower() and (category is None or nd.getType() == category)
+                ]
+
+                if name_matches:
+                    want_gltf = "gltf" in node_type.lower()
+                    exact_name = f"nd_{node_type.lower()}_{(category or '').lower()}"
+                    result = sorted(
+                        name_matches,
+                        key=lambda nd: (
+                            nd.getName().lower() != exact_name,
+                            ("gltf" in nd.getName().lower()) and not want_gltf,
+                        ),
+                    )[0]
+                    self.logger.debug("Found match by name: %s (type: %s)", result.getName(), result.getType())
+                    self.logger.info("Found match by name: %s (type: %s)", result.getName(), result.getType())
                 else:
                     # If no match by name, try partial matching on type
                     self.logger.info("No match by name, trying partial matching on type...")
@@ -740,7 +741,9 @@ class MaterialXDocumentManager:
         """
         nodedef = self.get_node_definition(node_type, category)
         if nodedef:
-            return nodedef.getInput(input_name)
+            # getActiveInput resolves inherited inputs (e.g. standard_surface only
+            # declares base/base_color directly; the rest come via inheritance).
+            return nodedef.getActiveInput(input_name) or nodedef.getInput(input_name)
         return None
 
     def get_output_definition(self, node_type: str, output_name: str, category: str | None = None) -> mx.Output | None:
@@ -1765,15 +1768,17 @@ class MaterialXLibraryBuilder:
         if nodegraph_name:
             # Connect to nodegraph output
             if self.nodegraph:
-                _output = self.node_builder.add_output(self.nodegraph, input_name, input_type, nodename or input_name)
-                # Connect surface shader input to nodegraph output
-                self.node_builder.create_mtlx_input(
-                    surface_node,
-                    input_name,
-                    nodename=f"{nodegraph_name}.{input_name}",
-                    node_type="standard_surface",
-                    category="surfaceshader",
-                )
+                # Reuse the existing output if the caller already created one for this input
+                # (avoids a duplicate "<name>2" output that points at the output name itself).
+                if self.nodegraph.getOutput(input_name) is None:
+                    self.node_builder.add_output(self.nodegraph, input_name, input_type, nodename or input_name)
+                # Reference the nodegraph output via nodegraph+output attributes
+                # ("nodename=graph.output" dot-syntax is rejected by validation).
+                # Use the sanitized nodegraph name, not the raw material name.
+                surface_input = surface_node.getInput(input_name) or surface_node.addInput(input_name, input_type)
+                surface_input.removeAttribute("value")
+                surface_input.setNodeGraphString(self.nodegraph.getName())
+                surface_input.setOutputString(input_name)
         elif nodename:
             # Connect to specific node
             self.node_builder.create_mtlx_input(surface_node, input_name, nodename=nodename)
@@ -1809,6 +1814,46 @@ class MaterialXLibraryBuilder:
         if self.material_node and self.surface_shader:
             # Connect material to surface shader
             self.node_builder.create_mtlx_input(self.material_node, "surfaceshader", nodename=surface_node_name)
+
+    def add_displacement_shader_node(self, name: str) -> str:
+        """
+        Add a displacement shader node at the document level.
+
+        Args:
+            name: The node name
+
+        Returns:
+            str: The created node name
+        """
+        node = self.node_builder.add_node("displacement", name, "displacementshader", self.document)
+        if node:
+            node_name = node.getName()
+            self.nodes[node_name] = node
+            return node_name
+        return name
+
+    def set_material_displacement(self, displacement_node_name: str):
+        """
+        Set the displacement shader for the material.
+
+        Args:
+            displacement_node_name: The displacement shader node name
+        """
+        if not self.material_node:
+            # Create material node
+            self.material_node = self.node_builder.add_node(
+                "surfacematerial", self.material_name, "material", self.document
+            )
+
+        if self.material_node:
+            # Connect material to displacement shader
+            self.node_builder.create_mtlx_input(
+                self.material_node,
+                "displacementshader",
+                nodename=displacement_node_name,
+                node_type="surfacematerial",
+                category="material",
+            )
 
     def _get_param_type(self, value) -> str:
         """

@@ -83,6 +83,12 @@ class MATERIALX_OT_export(Operator):  # noqa: N801
         default=True,
     )  # type: ignore
 
+    texture_folder_name: StringProperty(
+        name="Folder Name",
+        description="Subfolder next to the .mtlx to copy textures into. Leave empty to copy next to the .mtlx",
+        default="textures",
+    )  # type: ignore
+
     relative_paths: BoolProperty(
         name="Relative Paths",
         description="Use relative paths for texture references",
@@ -106,6 +112,7 @@ class MATERIALX_OT_export(Operator):  # noqa: N801
             options = {
                 "export_textures": self.export_textures,
                 "copy_textures": self.copy_textures,
+                "texture_folder_name": self.texture_folder_name,
                 "relative_paths": self.relative_paths,
                 "optimize_document": context.scene.materialx_optimize_document,
                 "advanced_validation": context.scene.materialx_advanced_validation,
@@ -233,6 +240,12 @@ class MATERIALX_OT_export_all(Operator):
         default=True,
     )  # type: ignore
 
+    texture_folder_name: StringProperty(
+        name="Folder Name",
+        description="Subfolder next to the .mtlx to copy textures into. Leave empty to copy next to the .mtlx",
+        default="textures",
+    )  # type: ignore
+
     relative_paths: BoolProperty(
         name="Relative Paths",
         description="Use relative paths for texture references",
@@ -248,6 +261,7 @@ class MATERIALX_OT_export_all(Operator):
         options = {
             "export_textures": self.export_textures,
             "copy_textures": self.copy_textures,
+            "texture_folder_name": self.texture_folder_name,
             "relative_paths": self.relative_paths,
             "materialx_version": MATERIALX_VERSION,
             "optimize_document": context.scene.materialx_optimize_document,

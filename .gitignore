@@ -19,3 +19,6 @@ MaterialX.v1.38.PBRSpec.pdf
 # Temporary files
 temp_*.blend
 examples/blender/*.blend
+
+
+**egg-info/*

@@ -35,6 +35,9 @@ wheels = [
 [[package]]
 name = "material-x"
 source = { virtual = "." }
+dependencies = [
+    { name = "materialx" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -43,11 +46,29 @@ dev = [
 ]
 
 [package.metadata]
+requires-dist = [{ name = "materialx", specifier = ">=1.39.5" }]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "pydoclint", specifier = ">=0.8.3" },
     { name = "ruff", specifier = ">=0.15.12" },
+]
+
+[[package]]
+name = "materialx"
+version = "1.39.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/55/83/06e1343c91e2bb201a639dbe89092d1581f6aa1be863c71a28dbc0502bb6/materialx-1.39.5.tar.gz", hash = "sha256:e6d4da032bce6fd782ec91fe898866b80cf988103c7d70e7d530404f45f5644c", size = 9459034, upload-time = "2026-05-22T19:46:40.661Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/89/2d7c2138fd0a88419e91047b804fcb103a71787671e7961be6be9e754bcc/materialx-1.39.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:2434b2ad758cd78d21ef90be8fdf303e65ee7eb1ddc9c5b473e1013588da3907", size = 5601677, upload-time = "2026-05-22T19:46:03.034Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/0b/e99740e986ba1da6bad357438531aed9eedec4fae1d858f619f73aae8711/materialx-1.39.5-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:925c4400d14eee499c83bd3f5a2d7224d3f253c47ec68ec6778ab35f1aa6882c", size = 10630048, upload-time = "2026-05-22T19:46:05.635Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/9b/d9a894610b09afa04e7b5b89b6e14816191c580ae9ad1c03cc36d23e0299/materialx-1.39.5-cp310-cp310-win_amd64.whl", hash = "sha256:a3c09e144b85e6fa2e75b87f6828bfcea52145edc1df6cbb6b5e639a8f3da9e5", size = 5715718, upload-time = "2026-05-22T19:46:07.752Z" },
+    { url = "https://files.pythonhosted.org/packages/cc/98/3570745c1c6ce25ea98dbcf40565566e5019ef132fc06eb68f35b7627658/materialx-1.39.5-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:7b530c0f660590c8f63ae2b7d598130ac046e52643dc0baa761f288fd3748840", size = 5616253, upload-time = "2026-05-22T19:46:09.298Z" },
+    { url = "https://files.pythonhosted.org/packages/85/65/a729db9ee1b1cb55095d93dfc0ec1df9cfa416b8a36b42d9fa19443181e0/materialx-1.39.5-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:027f352adb7788d559b65bcb51b1ac9b0e4f8b23e7341b8e093ac72f8aa1e55f", size = 10646120, upload-time = "2026-05-22T19:46:11.37Z" },
+    { url = "https://files.pythonhosted.org/packages/56/3e/35f6e8b8b751bca2fa9c4b59953bc01e0cc871ae64494470cd83247b07b5/materialx-1.39.5-cp311-cp311-win_amd64.whl", hash = "sha256:5b8437f8666bee19f43bf91abd3bd38dee65ba0654737e84b25b8d3cc7b2176c", size = 5725385, upload-time = "2026-05-22T19:46:13.426Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/36/af5f330338e7112ad280a5979ccce92e50948e5e83c91195a398d31ef7c4/materialx-1.39.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:58b0f3d9ce2171e71733e0a0e5b1170869a4d0eb273a9ed07fa91479d13552e2", size = 5622926, upload-time = "2026-05-22T19:46:15.143Z" },
+    { url = "https://files.pythonhosted.org/packages/de/8d/30bca836e6de2ab468e28254d1d42e4b9a32f517eb0ef00538569578bac7/materialx-1.39.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:897c5a5df9068cc50b966e4bcda63fb71d03b79c453dcf5b62b3d16a5b3369ce", size = 10654892, upload-time = "2026-05-22T19:46:17.3Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/39/4c2c6db98f81f34b79d12d2223fdd48bf7aa27cb8508b89cd9dcbdfa822b/materialx-1.39.5-cp312-cp312-win_amd64.whl", hash = "sha256:ba1538f77ee03515b3477341efc7f92d86641d924feb947e40303dbf793156c6", size = 5746673, upload-time = "2026-05-22T19:46:19.573Z" },
 ]
 
 [[package]]

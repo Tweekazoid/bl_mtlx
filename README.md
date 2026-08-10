@@ -19,7 +19,7 @@ A professional-grade Blender addon to export Blender materials to MaterialX (.mt
 
 ### Manual Installation
 
-1. Copy the `materialx_addon/` directory to your Blender addons directory:
+1. Copy the `material_x/` directory to your Blender addons directory:
 
    - **macOS**: `~/Library/Application Support/Blender/VERSION/scripts/addons/`
    - **Windows**: `%APPDATA%\Blender Foundation\Blender\VERSION\scripts\addons\`

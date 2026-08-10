@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 LOG = logging.getLogger(__name__)
 
 THIS_REPO_ADDON = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "materialx_addon"),
+    os.path.join(os.path.dirname(__file__), "..", "material_x"),
 ).replace("\\", "/")
 
 

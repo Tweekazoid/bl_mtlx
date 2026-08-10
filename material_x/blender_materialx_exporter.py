@@ -249,7 +249,8 @@ NODE_SCHEMAS = {
         # Sheen properties
         {"blender": "Sheen", "mtlx": "sheen", "type": "float", "category": "surfaceshader"},
         {"blender": "Sheen Color", "mtlx": "sheen_color", "type": "color3", "category": "surfaceshader"},
-        {"blender": "Sheen Tint", "mtlx": "sheen_tint", "type": "float", "category": "surfaceshader"},
+        # Blender's "Sheen Tint" (color in 4.x+) maps to standard_surface sheen_color; there is no sheen_tint input.
+        {"blender": "Sheen Tint", "mtlx": "sheen_color", "type": "color3", "category": "surfaceshader"},
         {"blender": "Sheen Roughness", "mtlx": "sheen_roughness", "type": "float", "category": "surfaceshader"},
         # Coat properties
         {"blender": "Coat", "mtlx": "coat", "type": "float", "category": "surfaceshader"},
@@ -258,17 +259,11 @@ NODE_SCHEMAS = {
         {"blender": "Coat IOR", "mtlx": "coat_IOR", "type": "float", "category": "surfaceshader"},
         {"blender": "Coat Normal", "mtlx": "coat_normal", "type": "vector3", "category": "surfaceshader"},
         # Anisotropy properties
-        {"blender": "Anisotropic", "mtlx": "anisotropic", "type": "float", "category": "surfaceshader"},
+        {"blender": "Anisotropic", "mtlx": "specular_anisotropy", "type": "float", "category": "surfaceshader"},
         {
             "blender": "Anisotropic Rotation",
-            "mtlx": "anisotropic_rotation",
+            "mtlx": "specular_rotation",
             "type": "float",
-            "category": "surfaceshader",
-        },
-        {
-            "blender": "Anisotropic Direction",
-            "mtlx": "anisotropic_direction",
-            "type": "vector3",
             "category": "surfaceshader",
         },
         # Base properties (should be included for completeness)
@@ -578,7 +573,7 @@ NODE_MAPPING = {
         "mtlx_type": "normalmap",
         "mtlx_category": "vector3",
         "inputs": {
-            "Color": "default",
+            "Color": "in",
         },
         "outputs": {
             "Normal": "out",
@@ -922,6 +917,14 @@ class MaterialXBuilder:
         """Set material surface with enhanced validation."""
         self.library_builder.set_material_surface(surface_node_name)
 
+    def add_displacement_shader_node(self, name: str) -> str:
+        """Add a document-level displacement shader node."""
+        return self.library_builder.add_displacement_shader_node(name)
+
+    def set_material_displacement(self, displacement_node_name: str):
+        """Set the material displacement shader."""
+        self.library_builder.set_material_displacement(displacement_node_name)
+
     def to_string(self) -> str:
         """Convert to string using enhanced library methods."""
         return self.library_builder.to_string()
@@ -1103,9 +1106,8 @@ class NodeMapper:
             "coat_color": [1.0, 1.0, 1.0],
             "coat_roughness": 0.1,
             "coat_IOR": 1.5,
-            "anisotropic": 0.0,
-            "anisotropic_rotation": 0.0,
-            "anisotropic_direction": [0.0, 1.0, 0.0],
+            "specular_anisotropy": 0.0,
+            "specular_rotation": 0.0,
         }
 
         # Map inputs using enhanced schema with type information
@@ -1125,8 +1127,18 @@ class NodeMapper:
                     continue
 
                 if is_connected:
-                    # Connected input - add to nodegraph output and connect
-                    builder.add_output(mtlx_param, param_type, value_or_node)
+                    # Connected input - add to nodegraph output and connect.
+                    # If a float surface input is fed by a non-float source (e.g. a color3
+                    # image used as a roughness map), insert an 'extract' node to pull a
+                    # single channel (index 0 = red) so the output type matches.
+                    src_node = builder.nodes.get(value_or_node)
+                    source_type = src_node.getType() if src_node is not None else None
+                    if param_type == "float" and source_type is not None and source_type != "float":
+                        extract_name = builder.add_node("extract", f"extract_{mtlx_param}_{node_name}", "float")
+                        builder.add_connection(value_or_node, "out", extract_name, "in")
+                        builder.add_output(mtlx_param, param_type, extract_name)
+                    else:
+                        builder.add_output(mtlx_param, param_type, value_or_node)
                     builder.add_surface_shader_input(
                         node_name, mtlx_param, param_type, nodegraph_name=builder.material_name
                     )
@@ -1305,9 +1317,17 @@ class NodeMapper:
                     correct_input_name,
                 )
 
-                builder.add_connection(value_or_node, output_name, node_name, correct_input_name)
+                # normalmap 'in' expects vector3; if the source image is color3 (or
+                # another type), insert a 'convert' node so the connection types match.
+                src = builder.nodes.get(value_or_node)
+                src_type = src.getType() if src is not None else None
+                if src_type is not None and src_type != "vector3":
+                    convert_name = builder.add_node(f"convert_{src_type}", f"convert_normal_{node.name}", "vector3")
+                    builder.add_connection(value_or_node, output_name, convert_name, "in")
+                    builder.add_connection(convert_name, "out", node_name, correct_input_name)
+                else:
+                    builder.add_connection(value_or_node, output_name, node_name, correct_input_name)
             else:
-                # Set default normal value
                 builder.library_builder.node_builder.create_mtlx_input(
                     builder.nodes[node_name], "in", value=[0.5, 0.5, 1.0], node_type="normalmap", category="vector3"
                 )
@@ -2121,7 +2141,9 @@ class MaterialXExporter:
         # Default options
         self.active_uvmap = self.options.get("active_uvmap", "UVMap")
         self.export_textures = self.options.get("export_textures", True)
-        texture_path_opt = self.options.get("texture_path", ".")
+        # Optional subfolder next to the .mtlx for copied textures; empty = same dir as the .mtlx
+        texture_folder_name = str(self.options.get("texture_folder_name", "") or "").strip()
+        texture_path_opt = texture_folder_name if texture_folder_name else self.options.get("texture_path", ".")
         self.texture_path = (self.output_path.parent / texture_path_opt).resolve()
         self.materialx_version = self.options.get("materialx_version", "1.39")
         self.copy_textures = self.options.get("copy_textures", True)
@@ -2238,6 +2260,9 @@ class MaterialXExporter:
             self.builder.exporter = self
             self.logger.info("Created MaterialX builder with version %s", self.materialx_version)
 
+            # Copy textures and populate relative paths before exporting nodes that reference them
+            self._export_textures()
+
             # Configure Phase 3 features
             if self.advanced_validation:
                 self.builder.set_write_options(
@@ -2248,6 +2273,9 @@ class MaterialXExporter:
             surface_node_name = self._export_node_network(principled_node)
             self.logger.info("Node network export completed. Surface node: %s", surface_node_name)
             self.builder.set_material_surface(surface_node_name)
+
+            # Export displacement wired to the Material Output 'Displacement' socket, if present.
+            self._export_displacement()
 
             # Phase 3: Document optimization
             if self.optimize_document:
@@ -2345,6 +2373,103 @@ class MaterialXExporter:
             if node.type == "BSDF_PRINCIPLED":
                 return node
         return None
+
+    def _find_material_output_node(self) -> bpy.types.Node | None:
+        """Find the active Material Output node (fallback to first if none is active)."""
+        fallback = None
+        for node in self.material.node_tree.nodes:
+            if node.type == "OUTPUT_MATERIAL":
+                if getattr(node, "is_active_output", False):
+                    return node
+                if fallback is None:
+                    fallback = node
+        return fallback
+
+    def _export_displacement(self):
+        """Export displacement wired to the Material Output 'Displacement' socket.
+
+        Handles the standard Blender wiring: a Displacement node
+        (Height / Midlevel / Scale) feeding the Material Output 'Displacement'
+        input. The height may be a constant or driven by a texture chain.
+        """
+        output_node = self._find_material_output_node()
+        if not output_node:
+            return
+
+        disp_socket = output_node.inputs.get("Displacement")
+        if not disp_socket or not disp_socket.links:
+            return
+
+        disp_node = disp_socket.links[0].from_node
+        if disp_node.type != "DISPLACEMENT":
+            self.logger.warning(
+                "Displacement socket is driven by unsupported node '%s' (%s); skipping displacement.",
+                disp_node.name,
+                disp_node.type,
+            )
+            return
+
+        self.logger.info("Exporting displacement from node: %s", disp_node.name)
+
+        # Read constant Midlevel and Scale inputs.
+        midlevel = 0.0
+        scale = 1.0
+        mid_socket = disp_node.inputs.get("Midlevel")
+        if mid_socket is not None and not mid_socket.links:
+            midlevel = float(mid_socket.default_value)
+        scale_socket = disp_node.inputs.get("Scale")
+        if scale_socket is not None and not scale_socket.links:
+            scale = float(scale_socket.default_value)
+
+        height_socket = disp_node.inputs.get("Height")
+
+        disp_shader_name = self.builder.add_displacement_shader_node(f"displacement_{self.material.name}")
+
+        if height_socket is not None and height_socket.links:
+            # Height driven by a texture / node chain -> build a float displacement graph.
+            height_src = height_socket.links[0].from_node
+            if height_src not in self.exported_nodes:
+                self._export_node(height_src)
+            height_mtlx = self.exported_nodes.get(height_src)
+
+            src_node = self.builder.nodes.get(height_mtlx) if height_mtlx else None
+            src_type = src_node.getType() if src_node is not None else None
+
+            final_name = height_mtlx
+            # MaterialX displacement expects a float; extract a channel from color sources.
+            if src_type is not None and src_type != "float":
+                extract_name = self.builder.add_node("extract", f"extract_displacement_{disp_node.name}", "float")
+                self.builder.add_connection(height_mtlx, "out", extract_name, "in")
+                final_name = extract_name
+
+            # Blender displaces by (height - midlevel) * scale; subtract the midlevel offset.
+            if abs(midlevel) > 1e-6:
+                subtract_name = self.builder.add_node(
+                    "subtract", f"displacement_midlevel_{disp_node.name}", "float", in2=midlevel
+                )
+                self.builder.add_connection(final_name, "out", subtract_name, "in1")
+                final_name = subtract_name
+
+            # Expose the float displacement via a nodegraph output and connect the shader.
+            self.builder.add_output("displacement", "float", final_name)
+            self.builder.add_surface_shader_input(
+                disp_shader_name, "displacement", "float", nodegraph_name=self.builder.material_name
+            )
+        else:
+            # Constant height value.
+            height_value = 0.0
+            if height_socket is not None:
+                try:
+                    height_value = float(height_socket.default_value)
+                except TypeError:
+                    height_value = 0.0
+            self.builder.add_surface_shader_input(
+                disp_shader_name, "displacement", "float", value=str(height_value - midlevel)
+            )
+
+        self.builder.add_surface_shader_input(disp_shader_name, "scale", "float", value=str(scale))
+        self.builder.set_material_displacement(disp_shader_name)
+        self.logger.info("Displacement shader '%s' wired to material.", disp_shader_name)
 
     def _export_node_network(self, output_node: bpy.types.Node) -> str:
         """Export the node network starting from the output node."""
@@ -2513,28 +2638,67 @@ class MaterialXExporter:
                 self._export_texture(node.image)
 
     def _export_texture(self, image: bpy.types.Image):
-        """Export a single texture file."""
-        if not image.filepath:
+        """Export a single texture file (handles both on-disk and packed images)."""
+        source_path = Path(bpy.path.abspath(image.filepath)) if image.filepath else None
+        on_disk = source_path is not None and source_path.exists()
+        is_packed = image.packed_file is not None
+
+        if not on_disk and not is_packed:
+            self.logger.warning("Warning: Texture file not found: %s", source_path or image.name)
             return
 
-        source_path = Path(bpy.path.abspath(image.filepath))
-        if not source_path.exists():
-            self.logger.warning("Warning: Texture file not found: %s", source_path)
-            return
+        # Determine the output filename (packed images may lack a usable path).
+        if on_disk:
+            target_name = source_path.name
+        else:
+            target_name = Path(image.filepath).name if image.filepath else image.name
+            if not Path(target_name).suffix:
+                ext = {
+                    "OPEN_EXR": ".exr",
+                    "OPEN_EXR_MULTILAYER": ".exr",
+                    "PNG": ".png",
+                    "JPEG": ".jpg",
+                    "TARGA": ".tga",
+                    "TARGA_RAW": ".tga",
+                    "TIFF": ".tif",
+                    "BMP": ".bmp",
+                }.get(image.file_format, ".png")
+                target_name = f"{target_name}{ext}"
 
         # Compute relative path from .mtlx file to texture
         # MaterialX expects forward-slash paths. Build a relative path and
         # then normalise to POSIX style so it is portable across OSes.
-        rel_path = os.path.relpath(self.texture_path / source_path.name, self.output_path.parent).replace(os.sep, "/")
+        # Resolve both sides so mapped/UNC drives compare on the same mount.
+        try:
+            rel_path = os.path.relpath(self.texture_path / target_name, self.output_path.parent.resolve()).replace(
+                os.sep, "/"
+            )
+        except ValueError:
+            # Texture dir is on a different mount than the .mtlx (relpath not possible): fall back to filename
+            rel_path = target_name
         self.texture_paths[str(image.filepath)] = rel_path
+
+        if not self.copy_textures:
+            return
+
         # Copy the texture (overwrite if exists)
-        target_path = self.texture_path / source_path.name
-        if self.copy_textures:
-            try:
+        target_path = self.texture_path / target_name
+        try:
+            if on_disk:
                 shutil.copy2(source_path, target_path)
-                self.logger.info("Copied texture: %s", source_path.name)
-            except Exception:
-                self.logger.exception("Error copying texture %s", source_path.name)
+            else:
+                # Packed image: write its data out to the texture folder via a
+                # throwaway copy so the original image is left untouched.
+                img_copy = image.copy()
+                try:
+                    img_copy.filepath_raw = str(target_path)
+                    img_copy.file_format = image.file_format or "PNG"
+                    img_copy.save()
+                finally:
+                    bpy.data.images.remove(img_copy)
+            self.logger.info("Copied texture: %s", target_name)
+        except Exception:
+            self.logger.exception("Error copying texture %s", target_name)
 
 
 # Utility to robustly format Blender socket values for MaterialX XML

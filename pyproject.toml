@@ -7,7 +7,9 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
-dependencies = []
+dependencies = [
+    "MaterialX>=1.39.5",
+]
 
 [dependency-groups]
 dev = [
@@ -121,11 +123,11 @@ values = "0123456789"
 independent = true
 
 [[tool.bumpversion.files]]
-filename = "materialx_addon/__version__"
+filename = "material_x/__version__"
 search = "{current_version}"
 replace = "{new_version}"
 
 [[tool.bumpversion.files]]
-filename = "materialx_addon/blender_manifest.toml"
+filename = "material_x/blender_manifest.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
