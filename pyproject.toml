@@ -1,0 +1,131 @@
+[project]
+name = "material_x"
+dynamic = ["version"]
+description = "MaterialX Blender add-on"
+authors = [
+    {name = "Michal Hons", email = "info@mehpixel.com"},
+]
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.12",
+    "pydoclint>=0.8.3",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+include = ["pyproject.toml", "**/*.py", "*.py"]
+exclude = [
+    "_debug/**",
+    "_bck/**",
+    "*.tmp",
+    "__pycache__/**",
+    ".venv/**",
+    "*.pyi",
+]
+
+[tool.ruff.format]
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = [
+    "F",
+    "E",
+    "W",
+    "I",
+    "N",
+    "UP",
+    "B",
+    "A",
+    "C4",
+    "PIE",
+    "Q",
+    "RET",
+    "SIM",
+    "ARG",
+    "PL",
+    "TRY",
+    "PERF",
+    "RUF",
+]
+ignore = [
+    "PLR2004",
+    "PLR0913",
+    "PLR0911",
+    "TRY003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Blender add-on conventions require UPPER_SNAKE_CASE class names (e.g. BL_OBJECTOR_OT_*),
+# mutable-set bl_options class attributes, and large operator execute() bodies that the
+# Blender API contract makes hard to split. Suppress the rules that fight those patterns.
+"bl_objector/**.py" = [
+    "N801",     # Blender requires UPPER_SNAKE_CASE class names for operators/panels/menus
+    "RUF012",   # bl_options = {"REGISTER"} is the documented Blender pattern
+    "PLR0915",  # async timer operator bodies are intentionally inlined
+    "PERF203",  # try/except inside module-probe loop is intentional
+    "TRY300",   # return-in-try inside module-probe loop is clearer than else-block
+    "TRY301",   # inline raise inside operator timer is fine
+    "PLC0415",  # `requests` is imported lazily so non-Blender environments don't fail
+]
+".scripts/**.py" = ["N999"]  # dotted directory name is intentional
+
+[tool.ruff.lint.pylint]
+max-branches = 20
+max-statements = 80
+
+[tool.pydocstyle]
+style = "google"
+arg-type-hints-in-docstring = false
+check-return-types = false
+ignore-private-args = true
+ignore-underscore-args = true
+exclude = "\\.venv|\\.ruff_cache|build|__pycache__|\\.vscode|\\.git|\\.github|tests|_debug|_bck|.*\\.tmp|.*\\.pyi"
+
+
+
+[tool.bumpversion]
+current_version = "0.1.1"
+parse = """(?x)
+    (?P<major>0|[1-9]\\d*)\\.
+    (?P<minor>0|[1-9]\\d*)\\.
+    (?P<patch>0|[1-9]\\d*)
+    (?:
+        -dev(?P<dev>\\d+)
+    )?
+"""
+serialize = [
+    "{major}.{minor}.{patch}-dev{dev}",
+    "{major}.{minor}.{patch}",
+]
+search = "{current_version}"
+replace = "{new_version}"
+regex = false
+ignore_missing_version = false
+tag = false
+sign_tags = false
+tag_name = "material_x-v{new_version}"
+tag_message = "Bump version: {current_version} -> {new_version}"
+allow_dirty = true
+commit = false
+message = "Bump version: {current_version} -> {new_version}"
+commit_args = ""
+
+[tool.bumpversion.part.dev]
+optional_value = ""
+values = "0123456789"
+independent = true
+
+[[tool.bumpversion.files]]
+filename = "materialx_addon/__version__"
+search = "{current_version}"
+replace = "{new_version}"
+
+[[tool.bumpversion.files]]
+filename = "materialx_addon/blender_manifest.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'

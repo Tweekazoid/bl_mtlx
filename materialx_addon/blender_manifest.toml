@@ -1,0 +1,18 @@
+schema_version = "1.0.0"
+
+id = "material_x"
+type = "add-on"
+version = "0.1.1"
+
+name = "MaterialX"
+tagline = "MaterialX Blender add-on"
+maintainer = "Michal Hons | info@mehpixel.com"
+website = "https://github.com/Tweekazoid/blender_materialx_addon"
+
+tags = ["3D View"]
+blender_version_min = "3.0.0"
+
+license = ["SPDX:GPL-2.0-or-later"]
+
+[permissions]
+files = "Import downloaded assets into the scene"

@@ -1,0 +1,74 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Project Setup",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/.scripts/setup_project.sh",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}/.scripts/setup_project.bat"
+      },
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "[SCRIPTS] Hardlink Addon to Blenders",
+      "type": "debugpy",
+      "request": "launch",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      },
+      "program": "${workspaceFolder}/.scripts/hardlink_addon_to_blenders.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "[SCRIPTS] Remove Hardlink Addon from Blenders",
+      "type": "debugpy",
+      "request": "launch",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      },
+      "program": "${workspaceFolder}/.scripts/remove_hardlink_addon_from_blenders.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "[LINT] Ruff Check",
+      "type": "debugpy",
+      "request": "launch",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      },
+      "module": "ruff",
+      "args": ["check", "."],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+
+    {
+            "name": "[PYDOCS] Check All",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "${workspaceFolder}/.venv/bin/pydoclint",
+            "windows": {
+                "runtimeExecutable": "${workspaceFolder}/.venv/Scripts/pydoclint.exe"
+            },
+            "args": [
+                "--style", "google",
+                "--arg-type-hints-in-docstring", "false",
+                "--check-return-types", "false",
+                "--ignore-private-args", "true",
+                "--ignore-underscore-args", "true",
+                "--exclude", "\\.venv|\\.ruff_cache|build|__pycache__|\\.vscode|\\.git|\\.github|tests|_debug|_bck|.*\\.tmp|.*\\.pyi",
+                "."
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        },
+  ]
+}
