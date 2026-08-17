@@ -1,4 +1,4 @@
-"""MaterialX Export Addon for Blender"""
+"""MaterialX Import/Export Addon for Blender"""
 
 import json
 import logging
@@ -9,18 +9,18 @@ from bpy.types import Operator, Panel
 
 from . import blender_materialx_exporter, materialx_importer
 
-NAME = "MaterialX Export"
+NAME = "MaterialX Import/Export"
 VERSION = "1.1.4"
 
 bl_info = {
     "name": NAME,
-    "author": "Ben Houston (neuralsoft@gmail.com)",
-    "website": "https://github.com/Tweekazoid/blender_materialx_addon",
+    "author": "Michal Hons (info@mehpixel.com)",
+    "website": "https://github.com/Tweekazoid/bl_mtlx",
     "support": "COMMUNITY",
     "version": tuple(map(int, VERSION.split("."))),  # Updated version number
     "blender": (4, 0, 0),
     "location": "Properties > Material",
-    "description": "Export Blender materials to MaterialX format",
+    "description": "Import and export Blender materials to/from MaterialX format",
     "category": "Material",
 }
 
@@ -41,6 +41,7 @@ def print_startup_message():
     logger.info("🔧 Features:")
     logger.info("   • Export individual materials to MaterialX format")
     logger.info("   • Export all materials at once")
+    logger.info("   • Import MaterialX files back into Blender node graphs")
     logger.info("   • Support for texture export and copying")
     logger.info("   • MaterialX 1.39 specification compliance")
     logger.info("   • Fixed mix node parameters (fg, bg, mix)")
@@ -48,7 +49,7 @@ def print_startup_message():
     logger.info("   • Added roughness_anisotropy and artistic_ior utilities")
     logger.info("=" * 60)
     logger.info("💡 Usage: Select a material and click 'Export MaterialX'")
-    logger.info("🌐 More info: https://github.com/Tweekazoid/blender_materialx_addon")
+    logger.info("🌐 More info: https://github.com/Tweekazoid/bl_mtlx")
     logger.info("=" * 60)
 
 

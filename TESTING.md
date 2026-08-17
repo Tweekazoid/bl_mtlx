@@ -1,6 +1,6 @@
 # MaterialX Addon Testing Guide
 
-This document provides comprehensive information about testing the MaterialX Export addon for Blender.
+This document provides comprehensive information about testing the MaterialX Import/Export addon for Blender.
 
 ## 🧪 Test Scripts Overview
 

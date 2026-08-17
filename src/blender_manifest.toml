@@ -4,10 +4,10 @@ id = "material_x"
 type = "add-on"
 version = "0.1.1"
 
-name = "MaterialX"
-tagline = "MaterialX Blender add-on"
+name = "MaterialX Import/Export"
+tagline = "Import and export Blender materials to/from MaterialX"
 maintainer = "Michal Hons | info@mehpixel.com"
-website = "https://github.com/Tweekazoid/blender_materialx_addon"
+website = "https://github.com/Tweekazoid/bl_mtlx"
 
 tags = ["3D View"]
 blender_version_min = "3.0.0"

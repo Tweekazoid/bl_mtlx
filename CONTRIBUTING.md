@@ -1,6 +1,6 @@
-# Contributing to MaterialX Export for Blender
+# Contributing to MaterialX Import/Export for Blender
 
-Thank you for your interest in contributing to the MaterialX Export addon! This guide covers development setup, testing, and contribution guidelines.
+Thank you for your interest in contributing to the MaterialX Import/Export addon! This guide covers development setup, testing, and contribution guidelines.
 
 ## 🔧 Development Setup
 
@@ -208,10 +208,11 @@ The addon provides specific guidance for common issues:
 
 ## 📄 License
 
-By contributing to this project, you agree that your contributions will be licensed under the MIT License.
+By contributing to this project, you agree that your contributions will be licensed under the project's license (see [LICENSE](LICENSE)).
 
 ## 🙏 Acknowledgments
 
+- **Ben Houston** ([bhouston/blender_materialx_addon](https://github.com/bhouston/blender_materialx_addon)): For the original addon this project is based on
 - **MaterialX Team**: For the excellent MaterialX specification and library
 - **Blender Foundation**: For the powerful Blender platform
-- **mtlxutils Contributors**: For the comprehensive MaterialX utilities
+- **mtlxutils Contributors** ([kwokcb/MaterialX_Learn](https://github.com/kwokcb/MaterialX_Learn)): For the comprehensive MaterialX utilities

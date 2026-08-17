@@ -1,7 +1,7 @@
 [project]
 name = "material_x"
 version = "0.1.1"
-description = "MaterialX Blender add-on"
+description = "MaterialX import/export Blender add-on"
 authors = [
     {name = "Michal Hons", email = "info@mehpixel.com"},
 ]
