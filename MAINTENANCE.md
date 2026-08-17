@@ -132,7 +132,18 @@ Research what MaterialX node type corresponds to your Blender node:
 - **DO NOT** add nodes to the mapping tables if they don't have a direct MaterialX equivalent
 - **DO NOT** create placeholder nodes or fallback mappings for unsupported functionality
 - **DO** document unsupported nodes in error messages with helpful suggestions
-- **DO** consider using the emulation system (see EMULATE_NODE_PLAN.md) for complex nodes without direct equivalents
+- **DO** consider a *closest-single-node approximation* for procedural nodes without a direct equivalent (the current approach)
+
+**Current approach for nodes without a direct equivalent:** rather than emulating them with multi-node networks, the exporter substitutes the *closest single MaterialX standard node*. This is driven by `NODE_SCHEMAS` and `map_node_with_schema_enhanced` in `src/blender_materialx_exporter.py`. Examples already in place:
+
+- Brick Texture → `checkerboard`
+- Magic Texture → `fractal3d`
+- Noise / Musgrave Texture → `fractal3d`
+- Gradient Texture → `ramplr`
+- Wave Texture → `wave`
+- White Noise → `cellnoise3d`, Gabor → `noise3d`
+
+These are approximations (not exact visual matches) but keep the exported MaterialX portable and renderable. Anything without a reasonable single-node approximation should still be reported as an unsupported node.
 
 If a Blender node doesn't have a direct MaterialX equivalent, it should be handled as an unsupported node with a helpful error message rather than creating a placeholder or incorrect mapping.
 
