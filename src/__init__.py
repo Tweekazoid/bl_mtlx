@@ -7,7 +7,7 @@ import bpy
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator, Panel
 
-from . import blender_materialx_exporter
+from . import blender_materialx_exporter, materialx_importer
 
 NAME = "MaterialX Export"
 VERSION = "1.1.4"
@@ -27,7 +27,7 @@ bl_info = {
 MATERIALX_VERSION = "1.39"
 
 
-logger = logging.getLogger(bl_info["name"])
+logger = logging.getLogger(NAME)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler())
 
@@ -52,12 +52,12 @@ def print_startup_message():
     logger.info("=" * 60)
 
 
-class MATERIALX_OT_export(Operator):  # noqa: N801
+class MATERIALX_OT_export(Operator):
     """Export MaterialX file"""
 
     bl_idname = "materialx.export"
     bl_label = "Export MaterialX"
-    bl_options = {"REGISTER", "UNDO"}  # noqa: RUF012
+    bl_options = {"REGISTER", "UNDO"}
 
     filepath: StringProperty(
         name="File Path",
@@ -121,7 +121,10 @@ class MATERIALX_OT_export(Operator):  # noqa: N801
             }
 
             result = blender_materialx_exporter.export_material_to_materialx(
-                context.material, self.filepath, logger, options
+                context.material,
+                self.filepath,
+                logger,
+                options,
             )
 
             if result["success"]:
@@ -167,7 +170,7 @@ class MATERIALX_OT_export(Operator):  # noqa: N801
 
             context.scene.materialx_last_export_result = json.dumps(result)
 
-            return {"CANCELLED"}  # noqa: TRY300
+            return {"CANCELLED"}
 
         except Exception as e:
             # Enhanced exception handling with specific error types
@@ -308,7 +311,82 @@ class MATERIALX_OT_export_all(Operator):
         return {"RUNNING_MODAL"}
 
 
-class MATERIALX_PT_panel(Panel):  # noqa: N801
+class MATERIALX_OT_import(Operator):
+    """Import a MaterialX file as a new Blender material"""
+
+    bl_idname = "materialx.import_file"
+    bl_label = "Import MaterialX"
+    bl_options = {"REGISTER", "UNDO"}
+
+    filepath: StringProperty(
+        name="File Path",
+        description="Filepath of the MaterialX file to import",
+        maxlen=1024,
+        subtype="FILE_PATH",
+    )  # type: ignore
+
+    filter_glob: StringProperty(
+        default="*.mtlx",
+        options={"HIDDEN"},
+    )  # type: ignore
+
+    assign_to_object: BoolProperty(
+        name="Assign to Active Object",
+        description="Assign the first imported material to the active object",
+        default=True,
+    )  # type: ignore
+
+    def execute(self, context):
+        logger.info("=" * 60)
+        logger.info("MATERIALX IMPORT: Starting import of %s", self.filepath)
+        logger.info("=" * 60)
+
+        if not self.filepath:
+            self.report({"ERROR"}, "No file selected")
+            return {"CANCELLED"}
+
+        try:
+            result = materialx_importer.import_materialx_to_blender(self.filepath, logger)
+        except Exception as exc:
+            logger.exception("MaterialX import raised an exception")
+            self.report({"ERROR"}, f"Import failed: {exc}")
+            return {"CANCELLED"}
+
+        if not result.get("success"):
+            error_message = result.get("error", "Import failed")
+            self.report({"ERROR"}, error_message)
+            logger.error("✗ Import failed: %s", error_message)
+            return {"CANCELLED"}
+
+        materials = result.get("materials", [])
+        unsupported = result.get("unsupported_nodes", [])
+
+        # Optionally assign the first imported material to the active object.
+        if self.assign_to_object and materials:
+            obj = context.active_object
+            first_mat = bpy.data.materials.get(materials[0])
+            if obj is not None and first_mat is not None and hasattr(obj.data, "materials"):
+                if obj.data.materials:
+                    obj.data.materials[0] = first_mat
+                else:
+                    obj.data.materials.append(first_mat)
+
+        message = f"Imported {len(materials)} material(s)"
+        if unsupported:
+            message += f" with {len(unsupported)} unsupported node(s)"
+            for item in unsupported[:5]:
+                self.report({"WARNING"}, f"Unsupported: {item['category']} ({item['reason']})")
+        self.report({"INFO"}, message)
+        logger.info("✓ Import successful: %s", message)
+        context.scene.materialx_last_import_result = json.dumps(result)
+        return {"FINISHED"}
+
+    def invoke(self, context, event):  # noqa: ARG002
+        context.window_manager.fileselect_add(self)
+        return {"RUNNING_MODAL"}
+
+
+class MATERIALX_PT_panel(Panel):
     """MaterialX panel in Properties > Material"""
 
     bl_label = "MaterialX"
@@ -330,6 +408,13 @@ class MATERIALX_PT_panel(Panel):  # noqa: N801
 
         col = box.column(align=True)
         col.operator("materialx.export", text="Export MaterialX", icon="EXPORT")
+
+        # Import section
+        box = layout.box()
+        box.label(text="Import MaterialX", icon="IMPORT")
+
+        col = box.column(align=True)
+        col.operator("materialx.import_file", text="Import MaterialX", icon="IMPORT")
 
         # Export all materials section
         box = layout.box()
@@ -383,7 +468,7 @@ class MATERIALX_PT_panel(Panel):  # noqa: N801
                         # Handle export all results
                         if "total_materials" in result:
                             col.label(
-                                text=f"Materials: {result['successful_exports']}/{result['total_materials']} exported"
+                                text=f"Materials: {result['successful_exports']}/{result['total_materials']} exported",
                             )
                     else:
                         col = box.column(align=True)
@@ -410,11 +495,15 @@ class MATERIALX_PT_panel(Panel):  # noqa: N801
 # Add properties to scene for configuration
 def register_properties():
     bpy.types.Scene.materialx_optimize_document = BoolProperty(
-        name="Optimize", description="Optimize MaterialX document by removing unused nodes", default=True
+        name="Optimize",
+        description="Optimize MaterialX document by removing unused nodes",
+        default=True,
     )
 
     bpy.types.Scene.materialx_advanced_validation = BoolProperty(
-        name="Validation", description="Enable comprehensive MaterialX document validation", default=True
+        name="Validation",
+        description="Enable comprehensive MaterialX document validation",
+        default=True,
     )
 
     bpy.types.Scene.materialx_strict_mode = BoolProperty(
@@ -425,7 +514,16 @@ def register_properties():
 
     # Store export result as a JSON string to preserve structure
     bpy.types.Scene.materialx_last_export_result = bpy.props.StringProperty(
-        name="Last Export Result", description="Result of the last MaterialX export operation", default=""
+        name="Last Export Result",
+        description="Result of the last MaterialX export operation",
+        default="",
+    )
+
+    # Store import result as a JSON string to preserve structure
+    bpy.types.Scene.materialx_last_import_result = bpy.props.StringProperty(
+        name="Last Import Result",
+        description="Result of the last MaterialX import operation",
+        default="",
     )
 
 
@@ -434,18 +532,33 @@ def unregister_properties():
     del bpy.types.Scene.materialx_advanced_validation
     del bpy.types.Scene.materialx_strict_mode
     del bpy.types.Scene.materialx_last_export_result
+    del bpy.types.Scene.materialx_last_import_result
 
 
 classes = (
     MATERIALX_OT_export,
     MATERIALX_OT_export_all,
+    MATERIALX_OT_import,
     MATERIALX_PT_panel,
 )
+
+
+def menu_func_import(self, context):  # noqa: ARG001
+    """Add MaterialX import entry to the File > Import menu."""
+    self.layout.operator(MATERIALX_OT_import.bl_idname, text="MaterialX (.mtlx)")
+
+
+def menu_func_export(self, context):  # noqa: ARG001
+    """Add MaterialX export entry to the File > Export menu."""
+    self.layout.operator(MATERIALX_OT_export.bl_idname, text="MaterialX (.mtlx)")
 
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
     # Print startup message
     print_startup_message()
@@ -455,11 +568,14 @@ def register():
 
 
 def unregister():
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
+
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
     # Print unload message
-    logger.info("🎨 %s v%s unloaded", bl_info["name"], bl_info["version"])  # Unregister properties
+    logger.info("🎨 %s v%s unloaded", NAME, VERSION)  # Unregister properties
     unregister_properties()
 
 

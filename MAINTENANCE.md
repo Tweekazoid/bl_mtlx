@@ -14,7 +14,7 @@ The addon uses three main components for node mapping:
 
 ### 1. NODE_MAPPING Dictionary
 
-Located in `material_x/blender_materialx_exporter.py` around line 229.
+Located in `src/blender_materialx_exporter.py` around line 229.
 
 **Purpose:** Provides explicit mapping between Blender node types and their MaterialX equivalents, including input/output name translations.
 
@@ -57,7 +57,7 @@ NODE_MAPPING = {
 
 ### 2. NODE_SCHEMAS Dictionary
 
-Located in `material_x/blender_materialx_exporter.py` around line 143.
+Located in `src/blender_materialx_exporter.py` around line 143.
 
 **Purpose:** Provides type information and category for complex nodes that use schema-driven mapping.
 
@@ -89,7 +89,7 @@ NODE_SCHEMAS = {
 
 ### 3. NodeMapper Class
 
-Located in `material_x/blender_materialx_exporter.py` around line 728.
+Located in `src/blender_materialx_exporter.py` around line 728.
 
 **Purpose:** Contains mapper functions that handle the actual node creation and connection logic.
 

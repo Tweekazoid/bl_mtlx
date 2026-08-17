@@ -1,1 +1,1 @@
-"""Development helper scripts for BL Objector."""
+"""Development helper scripts for MaterialX."""

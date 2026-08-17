@@ -14,7 +14,7 @@ Thank you for your interest in contributing to the MaterialX Export addon! This 
 
 When developing or debugging the addon:
 
-1. **Make your code changes** to the addon files in `material_x/`
+1. **Make your code changes** to the addon files in `src/`
 2. **Deploy the changes** using the development script:
    ```bash
    python3 dev_upgrade_addon.py
@@ -88,7 +88,7 @@ The addon is built with extensibility in mind. To add support for a new Blender 
 
 ### 1. Add Node Mapper
 
-In `material_x/blender_materialx_exporter.py`, add a new mapping function:
+In `src/blender_materialx_exporter.py`, add a new mapping function:
 
 ```python
 @staticmethod

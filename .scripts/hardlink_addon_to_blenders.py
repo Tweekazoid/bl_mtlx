@@ -1,4 +1,4 @@
-"""Link BL Objector add-on folder into all detected Blender user addon directories.
+"""Link MaterialX add-on folder into all detected Blender user addon directories.
 
 Uses platform-appropriate links to avoid copying files during development:
 - Windows: NTFS directory junctions (mklink /J)
@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 LOG = logging.getLogger(__name__)
 
 THIS_REPO_ADDON = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "material_x"),
+    os.path.join(os.path.dirname(__file__), "..", "src"),
 ).replace("\\", "/")
 
 
@@ -51,11 +51,7 @@ def _parse_version(version: str) -> tuple[int, int]:
 
 
 def _install_subdir_for(version: str) -> str:
-    return (
-        "extensions/user_default"
-        if _parse_version(version) >= EXTENSIONS_MIN_VERSION
-        else "scripts/addons"
-    )
+    return "extensions/user_default" if _parse_version(version) >= EXTENSIONS_MIN_VERSION else "scripts/addons"
 
 
 def _discover_install_dirs() -> list[tuple[str, str]]:

@@ -1,6 +1,6 @@
 [project]
 name = "material_x"
-dynamic = ["version"]
+version = "0.1.1"
 description = "MaterialX Blender add-on"
 authors = [
     {name = "Michal Hons", email = "info@mehpixel.com"},
@@ -11,11 +11,18 @@ dependencies = [
     "MaterialX>=1.39.5",
 ]
 
+# these will not be included in build distributions
 [dependency-groups]
 dev = [
     "ruff>=0.15.12",
+    "bandit>=1.9.4",
     "pydoclint>=0.8.3",
 ]
+
+# This repo ships a Blender add-on (the src/ folder), it is not a pip package.
+# Tell PDM not to treat it as a distribution so it only manages the dev venv.
+[tool.pdm]
+distribution = false
 
 [tool.ruff]
 target-version = "py310"
@@ -28,36 +35,28 @@ exclude = [
     "__pycache__/**",
     ".venv/**",
     "*.pyi",
+    "src/mtlxutils/**",  # vendored third-party MaterialX utilities (own LICENSE)
 ]
 
 [tool.ruff.format]
 line-ending = "auto"
 
 [tool.ruff.lint]
-select = [
-    "F",
-    "E",
-    "W",
-    "I",
-    "N",
-    "UP",
-    "B",
-    "A",
-    "C4",
-    "PIE",
-    "Q",
-    "RET",
-    "SIM",
-    "ARG",
-    "PL",
-    "TRY",
-    "PERF",
-    "RUF",
+select = ["F", "E", "W", "C90", "I", "N", "D", "UP", "S1", "S2", "S3", "S5", "BLE", "FBT",
+    "B", "A", "C4", "COM", "DTZ", "T10", "FA", "ISC", "ICN", "LOG", "G", "INP", "PIE", "T20", "Q", "RSE", "RET", "SLF",
+    "SLOT", "SIM", "TID",
+    "TC001", "TC004", "TC005", "TC010",
+    "INT", "ARG", "FIX", "ERA", "PL", "TRY", "FLY", "PERF", "RUF"
 ]
 ignore = [
+    "D105", # undocumented-magic-method
+    "D107", # undocumented-public-init
+    "E501", # line-too-long
+    "PLC0415", # import-outside-top-level
     "PLR2004",
     "PLR0913",
     "PLR0911",
+    "RET504", # unnecessary-assign
     "TRY003",
 ]
 
@@ -65,7 +64,7 @@ ignore = [
 # Blender add-on conventions require UPPER_SNAKE_CASE class names (e.g. BL_OBJECTOR_OT_*),
 # mutable-set bl_options class attributes, and large operator execute() bodies that the
 # Blender API contract makes hard to split. Suppress the rules that fight those patterns.
-"bl_objector/**.py" = [
+"src/**.py" = [
     "N801",     # Blender requires UPPER_SNAKE_CASE class names for operators/panels/menus
     "RUF012",   # bl_options = {"REGISTER"} is the documented Blender pattern
     "PLR0915",  # async timer operator bodies are intentionally inlined
@@ -75,12 +74,16 @@ ignore = [
     "PLC0415",  # `requests` is imported lazily so non-Blender environments don't fail
 ]
 ".scripts/**.py" = ["N999"]  # dotted directory name is intentional
+".tests/**.py" = ["N999", "D", "S", "T20", "INP", "PLR", "BLE", "ARG", "DTZ"]  # test scripts: prints/asserts/no-docstrings allowed
 
 [tool.ruff.lint.pylint]
 max-branches = 20
 max-statements = 80
 
-[tool.pydocstyle]
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pydoclint]
 style = "google"
 arg-type-hints-in-docstring = false
 check-return-types = false
@@ -123,11 +126,11 @@ values = "0123456789"
 independent = true
 
 [[tool.bumpversion.files]]
-filename = "material_x/__version__"
+filename = "src/__version__"
 search = "{current_version}"
 replace = "{new_version}"
 
 [[tool.bumpversion.files]]
-filename = "material_x/blender_manifest.toml"
+filename = "src/blender_manifest.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'

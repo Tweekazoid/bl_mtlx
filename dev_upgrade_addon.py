@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Script to install (or upgrade) the MaterialX addon to the latest Blender version on macOS or Windows.
+"""Script to install (or upgrade) the MaterialX addon to the latest Blender version on macOS or Windows.
 
 This script will:
 1. Detect the latest Blender installation available on your system
@@ -11,13 +10,13 @@ This script will:
 Currently supported operating systems: macOS, Windows
 """
 
-import os
-import sys
-import shutil
 import glob
-import subprocess
-from pathlib import Path
+import os
 import platform
+import shutil
+import subprocess
+import sys
+
 
 def find_latest_blender():
     """Find the latest Blender installation on the current system (macOS or Windows)."""
@@ -26,7 +25,7 @@ def find_latest_blender():
     # ---------------------------------
     # macOS logic
     # ---------------------------------
-    if system == 'Darwin':
+    if system == "Darwin":
         blender_paths = [
             "/Applications/Blender.app",
             "/Applications/Blender 4.5.app",
@@ -45,21 +44,21 @@ def find_latest_blender():
     # ---------------------------------
     # Windows logic
     # ---------------------------------
-    elif system == 'Windows':
+    elif system == "Windows":
         blender_paths = []
         program_dirs = []
-        if 'PROGRAMFILES' in os.environ:
-            program_dirs.append(os.environ['PROGRAMFILES'])
-        if 'PROGRAMFILES(X86)' in os.environ:
-            program_dirs.append(os.environ['PROGRAMFILES(X86)'])
+        if "PROGRAMFILES" in os.environ:
+            program_dirs.append(os.environ["PROGRAMFILES"])
+        if "PROGRAMFILES(X86)" in os.environ:
+            program_dirs.append(os.environ["PROGRAMFILES(X86)"])
 
         for base in program_dirs:
-            foundation_dir = os.path.join(base, 'Blender Foundation')
+            foundation_dir = os.path.join(base, "Blender Foundation")
             if os.path.exists(foundation_dir):
-                blender_paths.extend(glob.glob(os.path.join(foundation_dir, 'Blender*')))
+                blender_paths.extend(glob.glob(os.path.join(foundation_dir, "Blender*")))
 
         # If Blender is on PATH, add its directory as a candidate
-        blender_on_path = shutil.which('blender')
+        blender_on_path = shutil.which("blender")
         if blender_on_path:
             blender_paths.append(os.path.dirname(blender_on_path))
     else:
@@ -79,14 +78,14 @@ def find_latest_blender():
         # 1. Try to parse version from the directory/app name
         # -----------------------------------------------------
         dir_name = os.path.basename(blender_path)
-        version_str = dir_name.replace('Blender', '').replace('.app', '').strip()
-        if version_str.startswith('-'):
+        version_str = dir_name.replace("Blender", "").replace(".app", "").strip()
+        if version_str.startswith("-"):
             version_str = version_str[1:]
 
         parsed_from_name = False
         if version_str:
             try:
-                version_parts = [int(x) for x in version_str.split('.')]
+                version_parts = [int(x) for x in version_str.split(".")]
                 while len(version_parts) < 3:
                     version_parts.append(0)
                 version_tuple = tuple(version_parts[:3])
@@ -100,7 +99,7 @@ def find_latest_blender():
         # 2. If parsing failed, query the executable directly
         # -----------------------------------------------------
         if not parsed_from_name:
-            if system == 'Darwin':
+            if system == "Darwin":
                 blender_exe = os.path.join(blender_path, "Contents/MacOS/Blender")
             else:  # Windows
                 blender_exe = os.path.join(blender_path, "blender.exe")
@@ -110,7 +109,7 @@ def find_latest_blender():
                     result = subprocess.run([blender_exe, "--version"], capture_output=True, text=True, timeout=10)
                     if result.returncode == 0 and "Blender" in result.stdout:
                         version_match = result.stdout.split("Blender")[1].strip().split()[0]
-                        version_parts = [int(x) for x in version_match.split('.')]
+                        version_parts = [int(x) for x in version_match.split(".")]
                         while len(version_parts) < 3:
                             version_parts.append(0)
                         version_tuple = tuple(version_parts[:3])
@@ -129,16 +128,15 @@ def find_latest_blender():
     return latest_blender
 
 
-
 def get_blender_addon_directory(blender_path):
     """Get the addon directory for the given Blender installation."""
     system = platform.system()
 
-    if system == 'Darwin':
+    if system == "Darwin":
         # macOS: ~/Library/Application Support/Blender/<version>/scripts/addons/
         home_dir = os.path.expanduser("~")
         support_dir = os.path.join(home_dir, "Library", "Application Support", "Blender")
-    elif system == 'Windows':
+    elif system == "Windows":
         # Windows: %APPDATA%\Blender Foundation\Blender\<version>\scripts\addons
         appdata = os.getenv("APPDATA")
         if not appdata:
@@ -154,14 +152,14 @@ def get_blender_addon_directory(blender_path):
     version_dirs = []
     for item in os.listdir(support_dir):
         item_path = os.path.join(support_dir, item)
-        if os.path.isdir(item_path) and item.replace('.', '').isdigit():
+        if os.path.isdir(item_path) and item.replace(".", "").isdigit():
             version_dirs.append(item)
 
     if not version_dirs:
         raise RuntimeError(f"No Blender version directories found in: {support_dir}")
 
     # Sort by version and get the latest
-    version_dirs.sort(key=lambda x: [int(i) for i in x.split('.')], reverse=True)
+    version_dirs.sort(key=lambda x: [int(i) for i in x.split(".")], reverse=True)
     latest_version_dir = version_dirs[0]
 
     addon_dir = os.path.join(support_dir, latest_version_dir, "scripts", "addons")
@@ -175,6 +173,7 @@ def get_blender_addon_directory(blender_path):
 
     print(f"Using addon directory: {addon_dir}")
     return addon_dir
+
 
 def remove_existing_addon(addon_dir, addon_name="material_x"):
     """Remove existing MaterialX addon if it exists."""
@@ -190,6 +189,7 @@ def remove_existing_addon(addon_dir, addon_name="material_x"):
     else:
         print("No existing addon found")
 
+
 def copy_addon_to_blender(addon_dir, source_dir):
     """Copy the current addon to Blender's addon directory."""
     addon_name = "material_x"
@@ -203,6 +203,7 @@ def copy_addon_to_blender(addon_dir, source_dir):
     except OSError as e:
         raise RuntimeError(f"Could not copy addon to {target_path}: {e}")
 
+
 def main():
     """Main installation function."""
     print("=" * 60)
@@ -212,7 +213,7 @@ def main():
     try:
         # Get the current script directory (project root)
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        addon_source_dir = os.path.join(script_dir, "material_x")
+        addon_source_dir = os.path.join(script_dir, "src")
 
         # Verify the addon source exists
         if not os.path.exists(addon_source_dir):
@@ -245,6 +246,7 @@ def main():
     except Exception as e:
         print(f"ERROR: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

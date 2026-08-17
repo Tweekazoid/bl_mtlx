@@ -1,0 +1,15 @@
+include:
+  - "**/*.py"
+
+exclude_dirs:
+  - ".venv"
+  - "__pycache__"
+  - ".tests"            # test scripts + synthetic fixtures
+  - "_debug"            # ad-hoc local probes, not shipped
+  - "_bck"
+
+skips:
+  - "B101" # assert_used — used in tests (excluded above, but harmless globally)
+  - "B404" # import subprocess — dev tooling launches Blender in headless mode
+  - "B603" # subprocess_without_shell_equals_true — args are constructed locally
+  - "B607" # start_process_with_partial_path — Blender discovered via known locations

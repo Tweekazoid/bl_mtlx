@@ -5,9 +5,9 @@
       "name": "Run Project Setup",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "${workspaceFolder}/.scripts/setup_project.sh",
+      "runtimeExecutable": "${workspaceFolder}/.vscode/pdm_setup_project.sh",
       "windows": {
-        "runtimeExecutable": "${workspaceFolder}/.scripts/setup_project.bat"
+        "runtimeExecutable": "${workspaceFolder}/.vscode/pdm_setup_project.bat"
       },
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}"
@@ -37,38 +37,63 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "[LINT] Ruff Check",
+      "name": "[RUFF] Check All",
       "type": "debugpy",
       "request": "launch",
-      "python": "${workspaceFolder}/.venv/bin/python",
-      "windows": {
-        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
-      },
       "module": "ruff",
       "args": ["check", "."],
       "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      }
     },
-
     {
-            "name": "[PYDOCS] Check All",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "${workspaceFolder}/.venv/bin/pydoclint",
-            "windows": {
-                "runtimeExecutable": "${workspaceFolder}/.venv/Scripts/pydoclint.exe"
-            },
-            "args": [
-                "--style", "google",
-                "--arg-type-hints-in-docstring", "false",
-                "--check-return-types", "false",
-                "--ignore-private-args", "true",
-                "--ignore-underscore-args", "true",
-                "--exclude", "\\.venv|\\.ruff_cache|build|__pycache__|\\.vscode|\\.git|\\.github|tests|_debug|_bck|.*\\.tmp|.*\\.pyi",
-                "."
-            ],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}"
-        },
+      "name": "[RUFF] Fix All",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "ruff",
+      "args": ["check", "--fix", "."],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      }
+    },
+    {
+      "name": "[BANDIT] Check All",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "bandit",
+      "args": ["-c", "_bandit.yaml", "-ll", "-r", "."],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      }
+    },
+    {
+      "name": "[PYDOCS] Check All",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/.venv/bin/pydoclint",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}/.venv/Scripts/pydoclint.exe"
+      },
+      "args": [
+        "--style", "google",
+        "--arg-type-hints-in-docstring", "false",
+        "--check-return-types", "false",
+        "--ignore-private-args", "true",
+        "--ignore-underscore-args", "true",
+        "--exclude", "\\.venv|\\.ruff_cache|build|__pycache__|\\.vscode|\\.git|\\.github|tests|_debug|_bck|.*\\.tmp|.*\\.pyi",
+        "."
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    }
   ]
 }

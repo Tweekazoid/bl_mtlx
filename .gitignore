@@ -5,6 +5,21 @@ io_scene_gltf2
 *.log
 MaterialX.v1.38.PBRSpec.pdf
 
+# Python dev tooling (PDM / ruff / venv)
+.venv
+.pdm-python
+pdm.lock
+.mypy_cache
+.ruff_cache
+out
+
+# debug and backup folders
+_debug/
+_bck/
+
+# debug env variables
+.env
+
 # Blender backup files
 *.blend1
 *.blend2

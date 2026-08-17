@@ -1,4 +1,4 @@
-"""Remove BL Objector development links from all detected Blender installs.
+"""Remove MaterialX development links from all detected Blender installs.
 
 Always checks BOTH the legacy addons location and the Blender 4.2+ extensions
 location, regardless of detected Blender version, so stale links from either
@@ -68,7 +68,10 @@ def _candidate_paths() -> list[tuple[str, str]]:
             continue
         for subdir in _REMOVAL_SUBDIRS:
             target = os.path.join(
-                BLENDER_VERSIONS_PATH, entry, subdir, RESULTING_ADDON_NAME,
+                BLENDER_VERSIONS_PATH,
+                entry,
+                subdir,
+                RESULTING_ADDON_NAME,
             ).replace("\\", "/")
             candidates.append((entry, target))
     return candidates
