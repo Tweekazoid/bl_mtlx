@@ -16,3 +16,13 @@ license = ["SPDX:GPL-2.0-or-later"]
 
 [permissions]
 files = "Import downloaded assets into the scene"
+
+[build]
+paths_exclude_pattern = [
+  "__pycache__/",
+  "*.pyc",
+  "*.pyo",
+  "/.*",
+  "*.zip",
+  "VERSION",
+]

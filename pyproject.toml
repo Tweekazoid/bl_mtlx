@@ -126,9 +126,14 @@ values = "0123456789"
 independent = true
 
 [[tool.bumpversion.files]]
-filename = "src/__version__"
+filename = "src/VERSION"
 search = "{current_version}"
 replace = "{new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = "src/blender_manifest.toml"
