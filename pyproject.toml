@@ -1,6 +1,6 @@
 [project]
 name = "material_x"
-version = "0.1.1"
+version = "0.1.2"
 description = "MaterialX import/export Blender add-on"
 authors = [
     {name = "Michal Hons", email = "info@mehpixel.com"},
@@ -94,7 +94,7 @@ exclude = "\\.venv|\\.ruff_cache|build|__pycache__|\\.vscode|\\.git|\\.github|te
 
 
 [tool.bumpversion]
-current_version = "0.1.1"
+current_version = "0.1.2"
 parse = """(?x)
     (?P<major>0|[1-9]\\d*)\\.
     (?P<minor>0|[1-9]\\d*)\\.

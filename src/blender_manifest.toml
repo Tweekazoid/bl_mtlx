@@ -2,7 +2,7 @@ schema_version = "1.0.0"
 
 id = "material_x"
 type = "add-on"
-version = "0.1.1"
+version = "0.1.2"
 
 name = "MaterialX Import/Export"
 tagline = "Import and export Blender materials to/from MaterialX"
